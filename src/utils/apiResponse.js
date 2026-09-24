@@ -11,3 +11,5 @@ class apiRequest{
         this.success = statusCode < 400
     }
 }
+
+export {apiRequest}
