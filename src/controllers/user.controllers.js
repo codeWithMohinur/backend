@@ -14,21 +14,30 @@ const registerUser = asyncHandler(async(req, res) => {
     // check for user creation
     // return res
 
+
+    // get user details
     const {fullName, email, password, userName} = req.body
         console.log("fullName", fullName);
         console.log("email", email);
+
+    // check validation     
     if(
         [fullName, userName, email, password].some((field) => 
         field?.trim() === "")
     ){
         return new apiError(400, "All field is required")
     }
+
+    // check user already exist yes or no - using userName , email
     const existedUser = User.findOne({
         $or: [{ userName },{ email }]
     })
     if(existedUser){
         throw new apiError(409, "user with userName or email is already exists")
     }
+
+
+    // check for image, avatar
     const avatarLocalPath = req.files?.avatar[0]?.path;
     const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
@@ -36,6 +45,8 @@ const registerUser = asyncHandler(async(req, res) => {
         throw new apiError(400, "Avatar file is required")
     }
 
+
+    // upload on cloudinary - avatar
     const avatar = await uploadOnCloudinary(avatarLocalPath)
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
@@ -44,6 +55,8 @@ const registerUser = asyncHandler(async(req, res) => {
     }
 
 
+
+    // create a users object - create entry in db
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -52,15 +65,21 @@ const registerUser = asyncHandler(async(req, res) => {
         email,
         password,
     })
+
+    // removed password and refresh token in filed from response
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
 
+
+    // check for user creation
     if(!createdUser){
         throw new apiError(500, "something went wrong while registering the user")
     }
 
 
+
+    // return res
     return res.statusCode(201).json(
         new apiResponse(200, createdUser, "User Registered is successfully")
     )
