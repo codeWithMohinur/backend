@@ -16,9 +16,10 @@ const registerUser = asyncHandler(async(req, res) => {
 
 
     // get user details
-    const {fullName, email, password, userName} = req.body
+    const {fullName, email, password, userName, watchHistory} = req.body
         console.log("fullName", fullName);
         console.log("email", email);
+        console.log("userName", userName)
 
     // check validation     
     if(
@@ -29,7 +30,7 @@ const registerUser = asyncHandler(async(req, res) => {
     }
 
     // check user already exist yes or no - using userName , email
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ userName },{ email }]
     })
     if(existedUser){
@@ -61,7 +62,7 @@ const registerUser = asyncHandler(async(req, res) => {
         fullName,
         avatar: avatar.url,
         coverImage: coverImage?.url || "",
-        userName : userName.toLowerCase,
+        userName: userName.toLowerCase(),
         email,
         password,
     })
@@ -80,8 +81,8 @@ const registerUser = asyncHandler(async(req, res) => {
 
 
     // return res
-    return res.statusCode(201).json(
-        new apiResponse(200, createdUser, "User Registered is successfully")
+    return res.json(
+        new apiRequest(201, createdUser, "User Registered is successfully")
     )
 })
 
