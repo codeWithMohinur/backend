@@ -17,9 +17,7 @@ const registerUser = asyncHandler(async(req, res) => {
 
     // get user details
     const {fullName, email, password, userName, watchHistory} = req.body
-        console.log("fullName", fullName);
-        console.log("email", email);
-        console.log("userName", userName)
+        
 
     // check validation     
     if(
@@ -40,7 +38,12 @@ const registerUser = asyncHandler(async(req, res) => {
 
     // check for image, avatar
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
 
     if (!avatarLocalPath) {
         throw new apiError(400, "Avatar file is required")
@@ -81,7 +84,7 @@ const registerUser = asyncHandler(async(req, res) => {
 
 
     // return res
-    return res.json(
+    return res.status(201).json(
         new apiRequest(201, createdUser, "User Registered is successfully")
     )
 })
