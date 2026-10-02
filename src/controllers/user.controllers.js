@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import { apiRequest } from "../utils/apiResponse.js";
+import { apiResponse } from "../utils/apiResponse.js";
 
 const generateAccessAndRefreshToken = async(userId) => {
     try {
@@ -17,8 +17,12 @@ const generateAccessAndRefreshToken = async(userId) => {
         return {refreshToken, accessToken}
         
     } catch (error) {
-        throw new apiError(500, "Something went wrong while generate access and refresh token")
-    }
+    console.log("TOKEN ERROR:", error);
+    throw new apiError(
+        500,
+        "Something went wrong while generate access and refresh token"
+    );
+}
 }
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -98,7 +102,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // return res
   return res
     .status(201)
-    .json(new apiRequest(201, createdUser, "User Registered is successfully"));
+    .json(new apiResponse(201, createdUser, "User Registered is successfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -111,7 +115,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const {userName, email, password} = req.body
 
-  if(!userName || !email){
+  if(!userName && !email){
     throw new apiError(400, "Please enter a valid username or email")
   }
 
@@ -140,10 +144,10 @@ const loginUser = asyncHandler(async (req, res) => {
 
   return res
   .status(200)
-  .cookie("AccessToken", accessToken, options)
-  .cookie("RefreshToken", refreshToken, options)
+  .cookie("accessToken", accessToken, options)
+  .cookie("refreshToken", refreshToken, options)
   .json(
-    new apiRequest(
+    new apiResponse(
         200,
         {
             user: loggedInUser, accessToken, refreshToken
@@ -154,7 +158,33 @@ const loginUser = asyncHandler(async (req, res) => {
 
 });
 
+const logoutUser = asyncHandler(async(req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refreshToken: undefined
+      }
+    },
+    {
+      new: true
+    }
+  )
+
+  const options = {
+    httpOnly: true,
+    secure: true
+  }
+  return res
+  .status(200)
+  .clearCookie("accessToken", options)
+  .clearCookie("refreshToken", options)
+  .json(new apiResponse(200, {}, "User loggedOut successfully"))
+
+})
+
 export { 
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser
 };
