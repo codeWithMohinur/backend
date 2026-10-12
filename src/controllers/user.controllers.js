@@ -282,7 +282,69 @@ const accountDetailsUpdate = asyncHandler(async(req, res) => {
   return res
   .status(200)
   .json(new apiResponse(200, user, "successfully update account details"))
-})
+});
+
+const avatarUpdate = asyncHandler(async(req, res) => {
+  const avatarLocalPath = await req.file?.path
+
+  if(!avatarLocalPath){
+    throw new apiError(400, "avatar file are must be required")
+  }
+
+  const avatar = await uploadOnCloudinary(avatarLocalPath)
+  if(!avatar.url){
+    throw new apiError(400, "Error while upload avatar file on cloudinary")
+  }
+
+  const user = await User.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          avatar : avatar.url
+        }
+      },
+      {
+        new: true
+      }
+  ).select("-password")
+
+  return res
+  .status(200)
+  .json(
+    new apiResponse(200, user, "Avatar upload successfully")
+  )
+});
+
+const coverImageUpdate = asyncHandler(async(req, res) => {
+  const coverImageLocalPath = await req.file?.path
+
+  if(!coverImageLocalPath){
+    throw new apiError(400, "cover image file are must be required")
+  }
+
+  const coverImage = await uploadOnCloudinary(avatarLocalPath)
+  if(!coverImage.url){
+    throw new apiError(400, "Error while upload cover image file on cloudinary")
+  }
+
+  const user = await User.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          coverImage : coverImage.url
+        }
+      },
+      {
+        new: true
+      }
+  ).select("-password")
+
+  return res
+  .status(200)
+  .json(
+    new apiResponse(200, user, "cover image file upload successfully")
+  )
+});
 
 export { 
   registerUser,
@@ -292,4 +354,6 @@ export {
   changeCurrentPassword,
   getCurrentUser,
   accountDetailsUpdate,
+  avatarUpdate,
+  coverImageUpdate
 };
